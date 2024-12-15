@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/> 
+    <title>Pronájem Zadků</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin:0; 
+            padding:0;
+            background: #f9f9f9; 
+            color: #333;
+        }
+
+        header, footer {
+            background: #222; 
+            color: #fff; 
+            padding:20px; 
+            text-align:center;
+        }
+
+        nav a {
+            margin:0 10px; 
+            color:#fff; 
+            text-decoration:none;
+        }
+
+        .hero {
+            background:#e2bfff; 
+            padding:50px 20px; 
+            text-align:center;
+        }
+
+        .hero h1 {
+            font-size:2em; 
+            margin-bottom:10px;
+        }
+
+        .sections {
+            display: flex;
+            flex-wrap: wrap;
+            padding:20px;
+        }
+
+        .section {
+            flex:1 1 calc(33.333% - 40px);
+            background:#fff; 
+            margin:10px; 
+            padding:20px;
+            box-shadow:0 0 5px rgba(0,0,0,0.1);
+            min-width:250px;
+        }
+
+        .section h2 {
+            margin-top:0;
+        }
+
+        .footer-info {
+            font-size:0.9em; 
+            margin-top:10px;
+        }
+
+        button {
+            background:#333; 
+            color:#fff; 
+            border:none; 
+            padding:10px 20px; 
+            cursor:pointer;
+        }
+
+        button:hover {
+            background:#555;
+        }
+
+        @media(max-width:800px) {
+            .section {
+                flex:1 1 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Pronájem Zadků</h1>
+        <nav>
+            <a href="#nabidka">Nabídka</a>
+            <a href="#analni-polohy">Anální polohy</a>
+            <a href="#kontakt">Kontakt</a>
+        </nav>
+    </header>
+
+    <div class="hero">
+        <h1>Potřebuješ zadek? My ho máme!</h1>
+        <p>Extra lízání, prodloužený zásun, vše dle tvého přání.</p>
+        <button>Rezervuj hned</button>
+    </div>
+
+    <div class="sections" id="nabidka">
+        <div class="section">
+            <h2>Sportovní Zadek</h2>
+            <p>Perfektní tvar, kondice, vhodný i pro náročné akce.</p>
+            <p>Cena: 2000 Kč/hod</p>
+        </div>
+        <div class="section">
+            <h2>VIP Zadek</h2>
+            <p>Luxusní zážitek s možností prodlouženého zásunu a extra lízání.</p>
+            <p>Cena: 3000 Kč/hod</p>
+        </div>
+        <div class="section">
+            <h2>Balíček “Slavnostní”</h2>
+            <p>Ideální pro svatby, rozlučky či firemní večírky.</p>
+            <p>Cena: 2500 Kč/hod</p>
+        </div>
+    </div>
+
+    <div class="sections" id="analni-polohy">
+        <div class="section">
+            <h2>Pejsek</h2>
+            <p>Klasika: klekni si a nech zadek připraven. Ideální pro lepší kontrolu rytmu.</p>
+        </div>
+        <div class="section">
+            <h2>Lžičky</h2>
+            <p>Oba ležíte na boku. Intimní, pohodlná pozice pro pomalý nájezd.</p>
+        </div>
+        <div class="section">
+            <h2>Na koníčka (reverse)</h2>
+            <p>Otočený čelem od partnera, kontrola hloubky a rychlosti podle tebe.</p>
+        </div>
+    </div>
+
+    <div class="sections" id="kontakt">
+        <div class="section">
+            <h2>Kontakt</h2>
+            <p>Mail: info@pronajemzadku.cz<br>
+            Tel: +420 123 456 789</p>
+            <form>
+                <input type="text" placeholder="Tvůj e-mail" style="width:100%;padding:10px;margin-bottom:10px;">
+                <textarea placeholder="Tvůj dotaz" style="width:100%;padding:10px;"></textarea>
+                <button type="submit">Odeslat</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Pronájem Zadků</p>
+        <p class="footer-info">Všechna práva vyhrazena. Vyžaduje humor a nadhled.</p>
+    </footer>
+</body>
+</html>
