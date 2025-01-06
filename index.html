@@ -1,150 +1,357 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/> 
-    <title>Pronájem Zadků</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin:0; 
-            padding:0;
-            background: #f9f9f9; 
-            color: #333;
-        }
+import React, { useState } from 'react';
+import { Settings } from 'lucide-react';
 
-        header, footer {
-            background: #222; 
-            color: #fff; 
-            padding:20px; 
-            text-align:center;
-        }
+const VILLA_DATA = {
+  "Oh Yeah Vila": {
+    color: "#ffb3b3",
+    items: [
+      { id: 1, name: "Budvar", priceCZK: 59, priceEUR: null, icon: "🍺" },
+      { id: 2, name: "Malibu", priceCZK: 99, priceEUR: null, icon: "🥥" },
+      { id: 3, name: "Jack s colou", priceCZK: 99, priceEUR: null, icon: "🥃" },
+      { id: 4, name: "Moscow Mule", priceCZK: 99, priceEUR: null, icon: "🍹" },
+      { id: 5, name: "Gin-Tonic", priceCZK: 99, priceEUR: null, icon: "🍸" },
+      { id: 6, name: "Mojito", priceCZK: 99, priceEUR: null, icon: "🍃" },
+      { id: 7, name: "Prosecco", priceCZK: 390, priceEUR: null, icon: "🍾" },
+      { id: 8, name: "Pivo sud 30 l", priceCZK: null, priceEUR: 125, icon: "🍺" },
+      { id: 9, name: "Pivo sud 50 l", priceCZK: null, priceEUR: 175, icon: "🍺" },
+      { id: 10, name: "Plyn", priceCZK: null, priceEUR: 12, icon: "⛽" },
+      { id: 11, name: "Gril", priceCZK: null, priceEUR: 20, icon: "🔥" }
+    ]
+  },
+  "Amazing Pool Vila": {
+    color: "#b3ffd9",
+    items: [
+      { id: 1, name: "Budvar", priceCZK: 59, priceEUR: null, icon: "🍺" },
+      { id: 2, name: "Malibu", priceCZK: 99, priceEUR: null, icon: "🥥" },
+      { id: 3, name: "Jack s colou", priceCZK: 99, priceEUR: null, icon: "🥃" },
+      { id: 4, name: "Moscow Mule", priceCZK: 99, priceEUR: null, icon: "🍹" },
+      { id: 5, name: "Gin-Tonic", priceCZK: 99, priceEUR: null, icon: "🍸" },
+      { id: 6, name: "Mojito", priceCZK: 99, priceEUR: null, icon: "🍃" },
+      { id: 7, name: "Coca-Cola", priceCZK: 32, priceEUR: null, icon: "🥤" },
+      { id: 8, name: "Sprite", priceCZK: 32, priceEUR: null, icon: "🥤" },
+      { id: 9, name: "Red Bull", priceCZK: 59, priceEUR: null, icon: "🧃" },
+      { id: 10, name: "Prosecco", priceCZK: 390, priceEUR: null, icon: "🍾" },
+      { id: 11, name: "Pivo sud 30 l", priceCZK: null, priceEUR: 125, icon: "🍺" },
+      { id: 12, name: "Pivo sud 50 l", priceCZK: null, priceEUR: 175, icon: "🍺" },
+      { id: 13, name: "Plyn", priceCZK: null, priceEUR: 12, icon: "⛽" },
+      { id: 14, name: "Gril", priceCZK: null, priceEUR: 20, icon: "🔥" }
+    ]
+  },
+  "Little Castle Vila": {
+    color: "#ffd9b3",
+    items: [
+      { id: 1, name: "Budvar", priceCZK: 59, priceEUR: null, icon: "🍺" },
+      { id: 2, name: "Malibu", priceCZK: 99, priceEUR: null, icon: "🥥" },
+      { id: 3, name: "Jack s colou", priceCZK: 99, priceEUR: null, icon: "🥃" },
+      { id: 4, name: "Moscow Mule", priceCZK: 99, priceEUR: null, icon: "🍹" },
+      { id: 5, name: "Gin-Tonic", priceCZK: 99, priceEUR: null, icon: "🍸" },
+      { id: 6, name: "Mojito", priceCZK: 99, priceEUR: null, icon: "🍃" },
+      { id: 7, name: "Prosecco", priceCZK: 390, priceEUR: null, icon: "🍾" },
+      { id: 8, name: "Pivo sud 30 l", priceCZK: null, priceEUR: 125, icon: "🍺" },
+      { id: 9, name: "Pivo sud 50 l", priceCZK: null, priceEUR: 175, icon: "🍺" },
+      { id: 10, name: "Plyn", priceCZK: null, priceEUR: 12, icon: "⛽" },
+      { id: 11, name: "Gril", priceCZK: null, priceEUR: 20, icon: "🔥" }
+    ]
+  }
+};
 
-        nav a {
-            margin:0 10px; 
-            color:#fff; 
-            text-decoration:none;
-        }
+const App = () => {
+  const [selectedVilla, setSelectedVilla] = useState("Oh Yeah Vila");
+  const [cart, setCart] = useState([]);
+  const [wellnessPrice, setWellnessPrice] = useState(0);
+  const [guests, setGuests] = useState(1);
+  const [nights, setNights] = useState(1);
+  const [discountApplied, setDiscountApplied] = useState(false);
+  const [currency, setCurrency] = useState("CZK");
+  const [exchangeRate, setExchangeRate] = useState(25.5);
+  const [paymentMethod, setPaymentMethod] = useState("Neplaceno");
+  const [showInvoice, setShowInvoice] = useState(false);
 
-        .hero {
-            background:#e2bfff; 
-            padding:50px 20px; 
-            text-align:center;
-        }
+  const currentVilla = VILLA_DATA[selectedVilla];
 
-        .hero h1 {
-            font-size:2em; 
-            margin-bottom:10px;
-        }
+  const handleAddToCart = (item) => {
+    setCart(prev => [...prev, item]);
+  };
 
-        .sections {
-            display: flex;
-            flex-wrap: wrap;
-            padding:20px;
-        }
+  const calculateTotal = () => {
+    const subtotal = cart.reduce((acc, item) => {
+      if (item.priceCZK && currency === "CZK") return acc + item.priceCZK;
+      if (item.priceCZK && currency === "EUR") return acc + item.priceCZK / exchangeRate;
+      if (item.priceEUR && currency === "CZK") return acc + item.priceEUR * exchangeRate;
+      if (item.priceEUR && currency === "EUR") return acc + item.priceEUR;
+      return acc;
+    }, 0);
 
-        .section {
-            flex:1 1 calc(33.333% - 40px);
-            background:#fff; 
-            margin:10px; 
-            padding:20px;
-            box-shadow:0 0 5px rgba(0,0,0,0.1);
-            min-width:250px;
-        }
+    const wellnessInCurrency = currency === "CZK" ? wellnessPrice * exchangeRate : Number(wellnessPrice);
+    const totalBeforeDiscount = subtotal + wellnessInCurrency;
+    const discountAmount = discountApplied ? totalBeforeDiscount * 0.1 : 0;
+    const cityTax = guests * nights * 2;
+    const cityTaxInCurrency = currency === "CZK" ? cityTax * exchangeRate : cityTax;
 
-        .section h2 {
-            margin-top:0;
-        }
+    return {
+      subtotal,
+      wellnessInCurrency,
+      discountAmount,
+      cityTaxInCurrency,
+      total: totalBeforeDiscount - discountAmount + cityTaxInCurrency
+    };
+  };
 
-        .footer-info {
-            font-size:0.9em; 
-            margin-top:10px;
-        }
+  const getFormattedDate = () => {
+    return new Date().toLocaleString('cs-CZ', {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
-        button {
-            background:#333; 
-            color:#fff; 
-            border:none; 
-            padding:10px 20px; 
-            cursor:pointer;
-        }
+  if (showInvoice) {
+    const calculations = calculateTotal();
+    return (
+      <div className="min-h-screen p-4" style={{ backgroundColor: currentVilla.color }}>
+        <div className="bg-white rounded-lg p-4 shadow-lg">
+          <h1 className="text-2xl font-bold mb-4">{selectedVilla}</h1>
+          <p className="text-gray-600 mb-4">{getFormattedDate()}</p>
+          
+          <h2 className="text-xl font-semibold mb-2">Položky:</h2>
+          <ul className="space-y-2 mb-4">
+            {cart.map((item, index) => (
+              <li key={index} className="flex justify-between">
+                <span>{item.icon} {item.name}</span>
+                <span>{item.priceCZK ? `${item.priceCZK} Kč` : `${item.priceEUR} €`}</span>
+              </li>
+            ))}
+            {wellnessPrice > 0 && (
+              <li className="flex justify-between">
+                <span>💆‍♂️ Wellness</span>
+                <span>{wellnessPrice} €</span>
+              </li>
+            )}
+          </ul>
 
-        button:hover {
-            background:#555;
-        }
+          <div className="border-t pt-2 mb-4">
+            <p className="flex justify-between">
+              <span>City Tax ({guests} hostů × {nights} nocí × 2€)</span>
+              <span>{calculations.cityTaxInCurrency.toFixed(2)} {currency}</span>
+            </p>
+            {discountApplied && (
+              <p className="flex justify-between text-red-600">
+                <span>Sleva 10%</span>
+                <span>-{calculations.discountAmount.toFixed(2)} {currency}</span>
+              </p>
+            )}
+          </div>
 
-        @media(max-width:800px) {
-            .section {
-                flex:1 1 100%;
-            }
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <h1>Pronájem Zadků</h1>
-        <nav>
-            <a href="#nabidka">Nabídka</a>
-            <a href="#analni-polohy">Anální polohy</a>
-            <a href="#kontakt">Kontakt</a>
-        </nav>
-    </header>
+          <div className="border-t pt-2">
+            <p className="text-xl font-bold flex justify-between">
+              <span>Celkem:</span>
+              <span>{calculations.total.toFixed(2)} {currency}</span>
+            </p>
+            <p className="text-gray-600 mt-2">Platba: {paymentMethod}</p>
+          </div>
 
-    <div class="hero">
-        <h1>Potřebuješ zadek? My ho máme!</h1>
-        <p>Extra lízání, prodloužený zásun, vše dle tvého přání.</p>
-        <button>Rezervuj hned</button>
+          <button
+            onClick={() => {
+              setShowInvoice(false);
+              setCart([]);
+              setWellnessPrice(0);
+              setGuests(1);
+              setNights(1);
+              setDiscountApplied(false);
+              setPaymentMethod("Neplaceno");
+            }}
+            className="w-full mt-6 bg-blue-500 text-white py-3 rounded-lg"
+          >
+            Nová objednávka
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: currentVilla.color }}>
+      <div className="p-4">
+        <div className="flex items-center gap-2 mb-4">
+          <select
+            value={selectedVilla}
+            onChange={(e) => setSelectedVilla(e.target.value)}
+            className="flex-1 p-2 rounded-lg text-lg"
+          >
+            {Object.keys(VILLA_DATA).map(villa => (
+              <option key={villa} value={villa}>{villa}</option>
+            ))}
+          </select>
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className="p-2 rounded-lg"
+          >
+            <option value="CZK">CZK</option>
+            <option value="EUR">EUR</option>
+          </select>
+          <button
+            onClick={() => {
+              const userRate = prompt("Zadejte kurz 1 € v CZK:", exchangeRate);
+              if (userRate && !isNaN(userRate)) {
+                setExchangeRate(Number(userRate));
+              }
+            }}
+            className="p-2 rounded-lg bg-gray-100"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="space-y-2 mb-4">
+          <div className="flex gap-2">
+            <input
+              type="number"
+              min="1"
+              value={guests}
+              onChange={(e) => setGuests(Number(e.target.value))}
+              placeholder="Hosté"
+              className="flex-1 p-2 rounded-lg"
+            />
+            <input
+              type="number"
+              min="1"
+              value={nights}
+              onChange={(e) => setNights(Number(e.target.value))}
+              placeholder="Noci"
+              className="flex-1 p-2 rounded-lg"
+            />
+          </div>
+          <input
+            type="number"
+            value={wellnessPrice}
+            onChange={(e) => setWellnessPrice(Number(e.target.value))}
+            placeholder="Wellness (EUR)"
+            className="w-full p-2 rounded-lg"
+          />
+          <label className="flex items-center gap-2 bg-white p-2 rounded-lg">
+            <input
+              type="checkbox"
+              checked={discountApplied}
+              onChange={(e) => setDiscountApplied(e.target.checked)}
+            />
+            <span>Sleva 10%</span>
+          </label>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          {currentVilla.items.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => handleAddToCart(item)}
+              className="bg-white p-4 rounded-lg text-center shadow active:bg-gray-50"
+            >
+              <div className="text-3xl mb-1">{item.icon}</div>
+              <div className="font-medium">{item.name}</div>
+              <div className="text-gray-600">
+                {item.priceCZK ? `${item.priceCZK} Kč` : `${item.priceEUR} €`}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {cart.length > 0 && (
+          <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg">
+            <div className="mb-2">
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-full p-2 rounded-lg mb-2"
+              >
+                <option value="Neplaceno">Neplaceno</option>
+                <option value="Hotově">Hotově</option>
+                <option value="Kartou">Kartou</
+
+<option value="Hotově">Hotově</option>
+                <option value="Kartou">Kartou</option>
+              </select>
+            </div>
+            <div className="flex justify-between items-center mb-2">
+              <span>Celkem: {calculateTotal().total.toFixed(2)} {currency}</span>
+              <button
+                onClick={() => setShowInvoice(true)}
+                className="bg-green-500 text-white px-6 py-2 rounded-lg"
+              >
+                Faktura
+              </button>
+            </div>
+            <div className="text-sm text-gray-600">
+              {cart.length} položek v košíku
+            </div>
+          </div>
+        )}
+      </div>
     </div>
+  );
+};
 
-    <div class="sections" id="nabidka">
-        <div class="section">
-            <h2>Sportovní Zadek</h2>
-            <p>Perfektní tvar, kondice, vhodný i pro náročné akce.</p>
-            <p>Cena: 2000 Kč/hod</p>
-        </div>
-        <div class="section">
-            <h2>VIP Zadek</h2>
-            <p>Luxusní zážitek s možností prodlouženého zásunu a extra lízání.</p>
-            <p>Cena: 3000 Kč/hod</p>
-        </div>
-        <div class="section">
-            <h2>Balíček “Slavnostní”</h2>
-            <p>Ideální pro svatby, rozlučky či firemní večírky.</p>
-            <p>Cena: 2500 Kč/hod</p>
-        </div>
-    </div>
+export default App;
+```
 
-    <div class="sections" id="analni-polohy">
-        <div class="section">
-            <h2>Pejsek</h2>
-            <p>Klasika: klekni si a nech zadek připraven. Ideální pro lepší kontrolu rytmu.</p>
-        </div>
-        <div class="section">
-            <h2>Lžičky</h2>
-            <p>Oba ležíte na boku. Intimní, pohodlná pozice pro pomalý nájezd.</p>
-        </div>
-        <div class="section">
-            <h2>Na koníčka (reverse)</h2>
-            <p>Otočený čelem od partnera, kontrola hloubky a rychlosti podle tebe.</p>
-        </div>
-    </div>
+A zde je CSS kód, který by měl být v souboru styles.css:
 
-    <div class="sections" id="kontakt">
-        <div class="section">
-            <h2>Kontakt</h2>
-            <p>Mail: info@pronajemzadku.cz<br>
-            Tel: +420 123 456 789</p>
-            <form>
-                <input type="text" placeholder="Tvůj e-mail" style="width:100%;padding:10px;margin-bottom:10px;">
-                <textarea placeholder="Tvůj dotaz" style="width:100%;padding:10px;"></textarea>
-                <button type="submit">Odeslat</button>
-            </form>
-        </div>
-    </div>
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-    <footer>
-        <p>&copy; 2024 Pronájem Zadků</p>
-        <p class="footer-info">Všechna práva vyhrazena. Vyžaduje humor a nadhled.</p>
-    </footer>
-</body>
-</html>
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
+    "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optimalizace pro iPhone */
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Zabránění zvýrazňování při tapnutí na iOS */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Lepší scrollování na iOS */
+.overflow-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Stylování pro iOS input fields */
+input[type="number"],
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  border: 1px solid #e2e8f0;
+}
+
+/* Odstranění šipek z číselných inputů */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Přizpůsobení velikosti pro menší displeje */
+@media (max-width: 390px) {
+  .text-3xl {
+    font-size: 1.5rem;
+  }
+  .p-4 {
+    padding: 0.75rem;
+  }
+  .gap-2 {
+    gap: 0.375rem;
+  }
+}
