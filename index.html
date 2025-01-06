@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Villa POS</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <nav class="villa-nav">
+            <div class="tab-scroll">
+                <button class="villa-btn oh-yeah" onclick="selectVilla('oh-yeah')">
+                    <i class="fas fa-house"></i>
+                    <span>OH YEAH</span>
+                </button>
+                <button class="villa-btn amazing-pool" onclick="selectVilla('amazing-pool')">
+                    <i class="fas fa-water-ladder"></i>
+                    <span>Amazing Pool</span>
+                </button>
+                <button class="villa-btn little-castle" onclick="selectVilla('little-castle')">
+                    <i class="fas fa-castle"></i>
+                    <span>Little Castle</span>
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="stats-bar">
+                <div class="stat">
+                    <div class="stat-value" id="totalItems">0</div>
+                    <div class="stat-label">Položky</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="totalAmount">0 Kč</div>
+                    <div class="stat-label">Celkem</div>
+                </div>
+            </div>
+
+            <div class="inventory" id="inventory"></div>
+        </main>
+
+        <div id="quantitySelector" class="quantity-selector">
+            <div class="quantity-header">
+                <div id="selectedItemName" class="item-name"></div>
+                <div id="selectedItemPrice" class="item-price"></div>
+            </div>
+            <div class="quantity-controls">
+                <button class="quantity-btn" onclick="adjustQuantity(-1)">-</button>
+                <div class="quantity-display" id="quantityDisplay">1</div>
+                <button class="quantity-btn" onclick="adjustQuantity(1)">+</button>
+            </div>
+            <div class="quantity-actions">
+                <button class="cancel-btn" onclick="hideQuantitySelector()">Zrušit</button>
+                <button class="confirm-btn" onclick="confirmQuantity()">Přidat do košíku</button>
+            </div>
+        </div>
+
+        <footer class="cart-footer">
+            <button class="cart-toggle" onclick="toggleCart()">
+                <i class="fas fa-shopping-cart"></i>
+                <span id="cartCount">0</span>
+            </button>
+        </footer>
+
+        <div id="cartPanel" class="cart-panel">
+            <div class="cart-header">
+                <h2>Košík</h2>
+                <button class="close-btn" onclick="toggleCart()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="cart-items" id="cartItems"></div>
+            <div class="cart-controls">
+                <div class="control-group">
+                    <input type="number" id="guests" placeholder="Počet hostů" min="1">
+                    <input type="number" id="nights" placeholder="Počet nocí" min="1">
+                </div>
+                <div class="control-group">
+                    <select id="currency" onchange="updateStats()">
+                        <option value="CZK">CZK</option>
+                        <option value="EUR">EUR</option>
+                    </select>
+                    <button class="exchange-rate-btn" onclick="updateExchangeRate()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <select id="paymentMethod">
+                        <option value="cash">Hotově</option>
+                        <option value="card">Kartou</option>
+                        <option value="unpaid">Neplaceno</option>
+                    </select>
+                </div>
+                <label class="discount-toggle">
+                    <input type="checkbox" id="discount" onchange="updateStats()">
+                    <span>10% sleva</span>
+                </label>
+                <button class="generate-btn" onclick="generateInvoice()">
+                    Generovat fakturu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="invoiceModal">
+        <div class="modal-content" id="invoiceContent"></div>
+    </div>
+
+    <script src="inventory.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
