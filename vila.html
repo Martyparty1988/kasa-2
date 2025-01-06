@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Villa POS</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --oh-yeah-color: #FF6B6B;
+            --amazing-pool-color: #4ECDC4;
+            --little-castle-color: #96CEB4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px;
+            padding-bottom: 100px;
+            max-width: 600px;
+            margin: 0 auto;
+            background: #f5f5f5;
+        }
+
+        .villa-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .villa-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .villa-btn.active {
+            color: white;
+        }
+
+        .oh-yeah.active { background: var(--oh-yeah-color); }
+        .amazing-pool.active { background: var(--amazing-pool-color); }
+        .little-castle.active { background: var(--little-castle-color); }
+
+        .inventory {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .item {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+
+        .item:active {
+            transform: scale(0.98);
+        }
+
+        .item i {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .cart {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+        }
+
+        .cart-items {
+            margin-bottom: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="number"], select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 100%;
+        }
+
+        .currency-switch {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .exchange-rate-btn {
+            background: none;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .generate-btn {
+            background: #2ecc71;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .invoice-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .invoice-items {
+            margin-bottom: 20px;
+        }
+
+        .discount {
+            color: #e74c3c;
+        }
+
+        .total {
+            font-size: 1.2em;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .payment-method {
+            margin-top: 10px;
+            text-align: right;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="villa-selector">
+        <button class="villa-btn oh-yeah" onclick="selectVilla('oh-yeah')">OH YEAH</button>
+        <button class="villa-btn amazing-pool" onclick="selectVilla('amazing-pool')">Amazing Pool</button>
+        <button class="villa-btn little-castle" onclick="selectVilla('little-castle')">Little Castle</button>
+    </div>
+
+    <div class="inventory" id="inventory"></div>
+
+    <div class="cart">
+        <div class="cart-items" id="cartItems"></div>
+        <div class="controls">
+            <div class="control-group">
+                <input type="number" id="guests" placeholder="Počet hostů" min="1">
+                <input type="number" id="nights" placeholder="Počet nocí" min="1">
+            </div>
+            <div class="control-group">
+                <select id="currency">
+                    <option value="CZK">CZK</option>
+                    <option value="EUR">EUR</option>
+                </select>
+                <div class="currency-switch">
+                    <button class="exchange-rate-btn" onclick="updateExchangeRate()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <select id="paymentMethod">
+                    <option value="cash">Hotově</option>
+                    <option value="card">Kartou</option>
+                    <option value="unpaid">Neplaceno</option>
+                </select>
+            </div>
+        </div>
+        <label>
+            <input type="checkbox" id="discount"> 10% sleva
+        </label>
+        <button class="generate-btn" onclick="generateInvoice()">Generovat fakturu</button>
+    </div>
+
+    <div class="modal" id="invoiceModal">
+        <div class="modal-content" id="invoiceContent"></div>
+    </div>
+
+    <script>
+        const EXCHANGE_RATE = 25.5;
+        let currentVilla = null;
+        let cart = [];
+
+        const inventory = {
+            'oh-yeah': [
+                { name: 'Budvar', price: 59, currency: 'CZK', icon: 'fa-beer' },
+                { name: 'Malibu', price: 99, currency: 'CZK', icon: 'fa-cocktail' },
+                { name: 'Jack s colou', price: 99, currency: 'CZK', icon: 'fa-glass-whiskey' },
+                { name: 'Moscow Mule', price: 99, currency: 'CZK', icon: 'fa-cocktail' },
+                { name: 'Gin-Tonic', price: 99, currency: 'CZK', icon: 'fa-wine-glass' },
+                { name: 'Mojito', price: 99, currency: 'CZK', icon: 'fa-cocktail' },
+                { name: 'Prosecco', price: 390, currency: 'CZK', icon: 'fa-champagne-glasses' },
+                { name: 'Pivo sud 30l', price: 125, currency: 'EUR', icon: 'fa-beer-mug-empty' },
+                { name: 'Pivo sud 50l', price: 175, currency: 'EUR', icon: 'fa-beer-mug-empty' },
+                { name: 'Plyn', price: 12, currency: 'EUR', icon: 'fa-fire' },
+                { name: 'Gril', price: 20, currency: 'EUR', icon: 'fa-fire-burner' },
+                { name: 'Wellness', price: 0, currency: 'EUR', icon: 'fa-spa', customPrice: true }
+            ],
+            'amazing-pool': [
+                { name: 'Budvar', price: 59, currency: 'CZK', icon: 'fa-beer' },
+                { name: 'Malibu', price: 99, currency: 'CZK', icon: 'fa-cocktail' },
+                { name: 'Jack s colou', price: 99, currency: 'CZK', icon: 'fa-glass-whiskey' },
+                { name: 'Moscow Mule', price: 99, currency: 'CZK', icon: 'fa-cocktail' },
+                { name: 'Gin-Tonic', price: 99, currency: 'CZK', icon: 'fa-wine-glass' },
+                { name: 'Mojito', price: 99, currency: 'CZK', icon: 'fa-cocktail' },
+                { name: 'Coca-Cola', price: 32, currency: 'CZK', icon: 'fa-bottle-water' },
+                { name: 'Sprite', price: 32, currency: 'CZK', icon: 'fa-bottle-water' },
+                { name: 'Red Bull', price: 59, currency: 'CZK', icon: 'fa-bolt' },
+                { name: 'Prosecco', price: 390, currency: 'CZK', icon: 'fa-champagne-glasses' },
+                { name: 'Pivo sud 30l', price: 125, currency: 'EUR', icon: 'fa-beer-mug-empty' },
+                { name: 'Pivo sud 50l', price: 175, currency: 'EUR', icon: 'fa-beer-mug-empty' },
+                { name: 'Plyn', price: 12, currency: 'EUR', icon: 'fa-fire' },
+                { name: 'Gril', price: 20, currency: 'EUR', icon: 'fa-fire-burner' },
+                { name: 'Wellness', price: 0, currency: 'EUR', icon: 'fa-spa', customPrice: true }
+            ],
+            'little-castle': [
+                { name: 'Budvar', price: 59, currency: 'CZK', icon: 'fa-beer' },
+                { name: 'Malibu', price: 99, currency: 'CZK', icon: 'fa-cocktail' },
+                { name: 'Jack s colou', price: 99, currency: 'CZK', icon: 'fa-glass-whiskey' },
+                { name: 'Moscow Mule', price: 99, currency: 'CZK', icon: 'fa-cocktail' },
+                { name: 'Gin-Tonic', price: 99, currency: 'CZK', icon: 'fa-wine-glass' },
+                { name: 'Mojito', price: 99, currency: 'CZK', icon: 'fa-cocktail' },
+                { name: 'Prosecco', price: 390, currency: 'CZK', icon: 'fa-champagne-glasses' },
+                { name: 'Pivo sud 30l', price: 125, currency: 'EUR', icon: 'fa-beer-mug-empty' },
+                { name: 'Pivo sud 50l', price: 175, currency: 'EUR', icon: 'fa-beer-mug-empty' },
+                { name: 'Plyn', price: 12, currency: 'EUR', icon: 'fa-fire' },
+                { name: 'Gril', price: 20, currency: 'EUR', icon: 'fa-fire-burner' },
+                { name: 'Wellness', price: 0, currency: 'EUR', icon: 'fa-spa', customPrice: true }
+            ]
+        };
+
+        function selectVilla(villa) {
+            currentVilla = villa;
+            document.querySelectorAll('.villa-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.${villa}`).classList.add('active');
+            renderInventory();
+        }
+
+        function renderInventory() {
+            const inventoryEl = document.getElementById('inventory');
+            inventoryEl.innerHTML = '';
+            
+            inventory[currentVilla].forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'item';
+                itemEl.innerHTML = `
+                    <i class="fas ${item.icon}"></i>
+                    <div>${item.name}</div>
+                    <div>${item.price} ${item.currency}</div>
+                `;
+                itemEl.onclick = () => addToCart(item);
+                inventoryEl.appendChild(itemEl);
+            });
+        }
+
+        function addToCart(item) {
+            if (item.customPrice) {
+                const price = prompt('Zadejte cenu:');
+                if (price === null) return;
+                item = {...item, price: parseFloat(price)};
+            }
+            cart.push({...item, id: Date.now()});
+            renderCart();
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            renderCart();
+        }
+
+        function renderCart() {
+            const cartEl = document.getElementById('cartItems');
+            cartEl.innerHTML = '';
+            
+            cart.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'cart-item';
+                itemEl.innerHTML =
+                itemEl.innerHTML = `
+                    <div>${item.name}</div>
+                    <div>${item.price} ${item.currency}</div>
+                    <button onclick="removeFromCart(${item.id})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                cartEl.appendChild(itemEl);
+            });
+        }
+
+        function updateExchangeRate() {
+            const rate = prompt('Zadejte aktuální kurz EUR/CZK:', EXCHANGE_RATE);
+            if (rate && !isNaN(rate)) {
+                EXCHANGE_RATE = parseFloat(rate);
+            }
+        }
+
+        function calculateTotal(currency) {
+            let total = 0;
+            let discount = document.getElementById('discount').checked;
+            const guests = parseInt(document.getElementById('guests').value) || 0;
+            const nights = parseInt(document.getElementById('nights').value) || 0;
+
+            // City Tax výpočet
+            const cityTax = guests * nights * 2; // 2 EUR za noc a hosta
+
+            cart.forEach(item => {
+                let itemValue = item.price;
+                if (item.currency !== currency) {
+                    itemValue = item.currency === 'EUR' 
+                        ? itemValue * EXCHANGE_RATE 
+                        : itemValue / EXCHANGE_RATE;
+                }
+                total += itemValue;
+            });
+
+            if (currency === 'CZK') {
+                total += cityTax * EXCHANGE_RATE;
+            } else {
+                total += cityTax;
+            }
+
+            const discountAmount = discount ? (total * 0.1) : 0;
+            return { total, discountAmount };
+        }
+
+        function generateInvoice() {
+            const currency = document.getElementById('currency').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            const guests = document.getElementById('guests').value;
+            const nights = document.getElementById('nights').value;
+            const discount = document.getElementById('discount').checked;
+
+            if (!guests || !nights) {
+                alert('Zadejte počet hostů a nocí');
+                return;
+            }
+
+            const { total, discountAmount } = calculateTotal(currency);
+            const paymentMethods = {
+                cash: 'Hotově',
+                card: 'Kartou',
+                unpaid: 'Neplaceno'
+            };
+
+            const villaColors = {
+                'oh-yeah': 'var(--oh-yeah-color)',
+                'amazing-pool': 'var(--amazing-pool-color)',
+                'little-castle': 'var(--little-castle-color)'
+            };
+
+            const modal = document.getElementById('invoiceModal');
+            const content = document.getElementById('invoiceContent');
+            
+            content.innerHTML = `
+                <div class="invoice-header" style="color: ${villaColors[currentVilla]}">
+                    <h2>${document.querySelector('.villa-btn.active').textContent}</h2>
+                    <p>${new Date().toLocaleDateString()}</p>
+                </div>
+                <div class="invoice-items">
+                    ${cart.map(item => `
+                        <div class="cart-item">
+                            <span>${item.name}</span>
+                            <span>${item.price} ${item.currency}</span>
+                        </div>
+                    `).join('')}
+                    <div class="cart-item">
+                        <span>City Tax (${guests} hostů × ${nights} nocí)</span>
+                        <span>${guests * nights * 2} EUR</span>
+                    </div>
+                    ${discount ? `
+                        <div class="cart-item discount">
+                            <span>Sleva 10%</span>
+                            <span>-${discountAmount.toFixed(2)} ${currency}</span>
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="total">
+                    Celkem: ${(total - discountAmount).toFixed(2)} ${currency}
+                </div>
+                <div class="payment-method">
+                    Způsob platby: ${paymentMethods[paymentMethod]}
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+
+        // Inicializace první vily
+        selectVilla('oh-yeah');
+    </script>
+</body>
+</html>
