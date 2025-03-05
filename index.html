@@ -38,6 +38,13 @@
                 </div>
             </div>
 
+            <div class="filters">
+                <button onclick="renderInventory('all')">Vše</button>
+                <button onclick="renderInventory('drinks')">Nápoje</button>
+                <button onclick="renderInventory('alcohol')">Alkohol</button>
+                <button onclick="renderInventory('wellness')">Wellness</button>
+            </div>
+
             <div class="inventory" id="inventory"></div>
         </main>
 
@@ -95,6 +102,7 @@
                     <input type="checkbox" id="discount" onchange="updateStats()">
                     <span>10% sleva</span>
                 </label>
+                <button class="clear-cart-btn" onclick="clearCart()">Vyprázdnit košík</button>
                 <button class="generate-btn" onclick="generateInvoice()">
                     Generovat fakturu
                 </button>
