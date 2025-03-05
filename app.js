@@ -6,8 +6,9 @@ let currentQuantity = 1;
 let isCartOpen = false;
 
 // Inicializace aplikace
-function init() {
+async function init() {
     selectVilla('oh-yeah');
+    await fetchExchangeRate(); // Načtení aktuálního kurzu
     updateStats();
 }
 
@@ -19,15 +20,21 @@ function selectVilla(villa) {
     renderInventory();
 }
 
-function renderInventory() {
+function renderInventory(category = 'all') {
     const inventoryEl = document.getElementById('inventory');
     inventoryEl.innerHTML = '';
     
-    inventory[currentVilla].forEach(item => {
+    const filteredItems = category === 'all' 
+        ? inventory[currentVilla] 
+        : inventory[currentVilla].filter(item => item.category === category);
+
+    filteredItems.forEach(item => {
         const itemEl = document.createElement('div');
         itemEl.className = `item ${currentVilla}`;
         itemEl.innerHTML = `
-            <i class="fas ${item.icon}"></i>
+            <div class="item-image">
+                <img src="${item.image}" alt="${item.name}">
+            </div>
             <div class="item-name">${item.name}</div>
             <div class="item-price">${item.customPrice ? 'Vlastní cena' : `${item.price} ${item.currency}`}</div>
         `;
@@ -37,21 +44,7 @@ function renderInventory() {
 }
 
 function handleItemClick(item) {
-    if (item.name === 'Wellness') {
-        const price = prompt('Zadejte cenu wellness v EUR:');
-        if (price === null || isNaN(price)) return;
-        
-        cart.push({
-            ...item,
-            id: Date.now(),
-            price: parseFloat(price),
-            quantity: 1
-        });
-        renderCart();
-        updateStats();
-    } else {
-        showQuantitySelector(item);
-    }
+    showQuantitySelector(item);
 }
 
 // Správa množství
@@ -77,6 +70,12 @@ function adjustQuantity(delta) {
 }
 
 function confirmQuantity() {
+    if (selectedItem.customPrice) {
+        const price = prompt('Zadejte cenu za jednotku v EUR:');
+        if (price === null || isNaN(price) || price <= 0) return;
+        selectedItem.price = parseFloat(price);
+    }
+    
     const newItems = Array(currentQuantity).fill().map((_, i) => ({
         ...selectedItem,
         id: Date.now() + i,
@@ -96,28 +95,44 @@ function toggleCart() {
     cartPanel.classList.toggle('active', isCartOpen);
 }
 
-function removeFromCart(id) {
-    cart = cart.filter(item => item.id !== id);
+function removeFromCart(key) {
+    const groupedItems = cart.reduce((acc, item) => {
+        const itemKey = `${item.name}-${item.price}-${item.currency}`;
+        if (!acc[itemKey]) acc[itemKey] = { ...item, quantity: 1 };
+        else acc[itemKey].quantity++;
+        return acc;
+    }, {});
+
+    const item = groupedItems[key];
+    if (item.quantity > 1) {
+        item.quantity--;
+        cart = cart.filter(i => !(i.name === item.name && i.price === item.price && i.currency === item.currency && item.quantity === 0));
+    } else {
+        cart = cart.filter(i => !(i.name === item.name && i.price === item.price && i.currency === item.currency));
+    }
+    renderCart();
+    updateStats();
+}
+
+function clearCart() {
+    cart = [];
     renderCart();
     updateStats();
 }
 
 function renderCart() {
     const cartEl = document.getElementById('cartItems');
-    document.getElementById('cartCount').textContent = cart.length;
+    document.getElementById('cartCount').textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
     cartEl.innerHTML = '';
     
     const groupedItems = cart.reduce((acc, item) => {
         const key = `${item.name}-${item.price}-${item.currency}`;
-        if (!acc[key]) {
-            acc[key] = { ...item, quantity: 1 };
-        } else {
-            acc[key].quantity++;
-        }
+        if (!acc[key]) acc[key] = { ...item, quantity: 1 };
+        else acc[key].quantity++;
         return acc;
     }, {});
     
-    Object.values(groupedItems).forEach(item => {
+    Object.entries(groupedItems).forEach(([key, item]) => {
         const itemEl = document.createElement('div');
         itemEl.className = 'cart-item';
         itemEl.innerHTML = `
@@ -127,7 +142,7 @@ function renderCart() {
             </div>
             <div>
                 ${(item.price * item.quantity).toFixed(2)} ${item.currency}
-                <button class="cart-item-remove" onclick="removeFromCart(${item.id})">
+                <button class="cart-item-remove" onclick="removeFromCart('${key}')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -136,10 +151,21 @@ function renderCart() {
     });
 }
 
-// Správa měny a výpočtů
+// Správa měn a výpočtů
+async function fetchExchangeRate() {
+    try {
+        const response = await fetch('https://api.cnb.cz/cnbapi/exrates/daily?lang=cs');
+        const data = await response.json();
+        EXCHANGE_RATE = data.rates.find(rate => rate.currency === 'EUR').rate || 25.5;
+        updateStats();
+    } catch (error) {
+        console.error('Nepodařilo se načíst kurz:', error);
+    }
+}
+
 function updateExchangeRate() {
     const rate = prompt('Zadejte aktuální kurz EUR/CZK:', EXCHANGE_RATE);
-    if (rate && !isNaN(rate)) {
+    if (rate && !isNaN(rate) && rate > 0) {
         EXCHANGE_RATE = parseFloat(rate);
         updateStats();
     }
@@ -154,13 +180,18 @@ function calculateTotal(currency) {
 
     // City Tax výpočet (2 EUR za osobu na noc)
     const cityTax = guests * nights * 2;
-    
-    // Převod City Tax do požadované měny
     cityTaxTotal = currency === 'CZK' ? cityTax * EXCHANGE_RATE : cityTax;
 
-    // Součet položek
-    cart.forEach(item => {
-        let itemValue = item.price;
+    // Součet položek s ohledem na množství
+    const groupedItems = cart.reduce((acc, item) => {
+        const key = `${item.name}-${item.price}-${item.currency}`;
+        if (!acc[key]) acc[key] = { ...item, quantity: 1 };
+        else acc[key].quantity++;
+        return acc;
+    }, {});
+
+    Object.values(groupedItems).forEach(item => {
+        let itemValue = item.price * item.quantity;
         if (item.currency !== currency) {
             itemValue = item.currency === 'EUR' 
                 ? itemValue * EXCHANGE_RATE 
@@ -179,21 +210,20 @@ function calculateTotal(currency) {
 function updateStats() {
     const currency = document.getElementById('currency').value;
     const { total, discountAmount } = calculateTotal(currency);
-    document.getElementById('totalItems').textContent = cart.length;
-    document.getElementById('totalAmount').textContent = 
-        `${(total - discountAmount).toFixed(2)} ${currency}`;
+    document.getElementById('totalItems').textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+    document.getElementById('totalAmount').textContent = `${(total - discountAmount).toFixed(2)} ${currency}`;
 }
 
 // Generování faktury
 function generateInvoice() {
     const currency = document.getElementById('currency').value;
     const paymentMethod = document.getElementById('paymentMethod').value;
-    const guests = document.getElementById('guests').value;
-    const nights = document.getElementById('nights').value;
+    const guests = parseInt(document.getElementById('guests').value);
+    const nights = parseInt(document.getElementById('nights').value);
     const discount = document.getElementById('discount').checked;
 
-    if (!guests || !nights) {
-        alert('Zadejte počet hostů a nocí');
+    if (isNaN(guests) || isNaN(nights) || guests < 1 || nights < 1) {
+        alert('Zadejte platný počet hostů a nocí');
         return;
     }
 
@@ -210,14 +240,10 @@ function generateInvoice() {
         'little-castle': 'var(--little-castle-color)'
     };
 
-    // Group items for invoice
     const groupedItems = cart.reduce((acc, item) => {
         const key = `${item.name}-${item.price}-${item.currency}`;
-        if (!acc[key]) {
-            acc[key] = { ...item, quantity: 1 };
-        } else {
-            acc[key].quantity++;
-        }
+        if (!acc[key]) acc[key] = { ...item, quantity: 1 };
+        else acc[key].quantity++;
         return acc;
     }, {});
 
@@ -240,7 +266,7 @@ function generateInvoice() {
                 <span>Mezisoučet položek</span>
                 <span>${itemsTotal.toFixed(2)} ${currency}</span>
             </div>
-            ${discount ? `
+            ${discountAmount > 0 ? `
                 <div class="cart-item discount">
                     <span>Sleva 10% (z položek)</span>
                     <span>-${discountAmount.toFixed(2)} ${currency}</span>
